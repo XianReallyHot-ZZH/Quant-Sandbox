@@ -1,11 +1,13 @@
 """Quant-Sandbox deliverable-integrity acceptance (placeholder, lesson 01).
 
-Of ADR-0006's four check categories, this lesson lands 1) required-files
-inventory and 4) full pytest; 2) research-report safety copy and 3) frozen
-dataset sha256 stay explicitly SKIPPED until their lessons land. Every
-skipped check must print SKIPPED plus a reason — silent passes are banned.
-Once a checked artifact exists but its assertion is not implemented, FAIL
-immediately (anti-silent-skip; research report §8.5 #6).
+Of ADR-0006's four check categories, this module lands 1) required-files
+inventory, 4) full pytest, and — since lesson 02 — the teaching-sample
+edition of 3) dataset manifest/sha256 verification; the investment-gate
+edition of 3) and 2) research-report safety copy stay explicitly SKIPPED
+until their lessons land. Every skipped check must print SKIPPED plus a
+reason — silent passes are banned. Once a checked artifact exists but its
+assertion is not implemented, FAIL immediately (anti-silent-skip; research
+report §8.5 #6).
 """
 
 from __future__ import annotations
@@ -16,6 +18,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from data.manifest import verify_manifest  # noqa: E402  (needs the bootstrap above)
 
 PASS = "PASS"
 SKIPPED = "SKIPPED"
@@ -74,6 +79,14 @@ def check_frozen_dataset(root: Path = ROOT) -> CheckResult:
     )
 
 
+def check_teaching_sample(root: Path = ROOT) -> CheckResult:
+    """3) Teaching-sample edition: first manifest dataset, landed in lesson 02."""
+    problems = verify_manifest(root / "data" / "teaching_sample")
+    if problems:
+        return CheckResult("教学样本数据集", FAIL, "; ".join(problems))
+    return CheckResult("教学样本数据集", PASS, "manifest.json sha256 全部一致")
+
+
 def check_pytest(root: Path = ROOT) -> CheckResult:
     """4) Full pytest run (ADR-0006: acceptance never depends on external services)."""
     proc = subprocess.run(
@@ -89,7 +102,12 @@ def check_pytest(root: Path = ROOT) -> CheckResult:
 
 
 def run_checks(*, run_tests: bool = True) -> list[CheckResult]:
-    results = [check_required_files(), check_safety_copy(), check_frozen_dataset()]
+    results = [
+        check_required_files(),
+        check_safety_copy(),
+        check_frozen_dataset(),
+        check_teaching_sample(),
+    ]
     if run_tests:
         results.append(check_pytest())
     return results

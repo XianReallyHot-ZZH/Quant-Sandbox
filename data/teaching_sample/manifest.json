@@ -1,0 +1,8 @@
+{
+  "source": "synthetic:src/data/generator.py (symbol=QUANT-DEMO/USDT, seed=20260902)",
+  "generated_at": "2026-09-02T00:00:00Z",
+  "files": {
+    "company.json": "2723475e9a169f6999c6322babdd8cc0cbc1c7b95ff001bcc8aa6eaa0db76092",
+    "prices.csv": "6569939160675024f9f32e0135c54df1fe342893cd4bbbe74a026cd06b37482c"
+  }
+}

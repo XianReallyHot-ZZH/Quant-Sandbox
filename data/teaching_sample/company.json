@@ -1,0 +1,32 @@
+{
+  "symbol": "QUANT-DEMO/USDT",
+  "name": "教学演示资产",
+  "fictional": true,
+  "summary": "本课程全部教学回测使用的虚构资产:价格序列由固定种子闭式公式合成,不对应任何真实代币、协议或交易所行情。",
+  "market_snapshot": {
+    "period": "2025-03-03 → 2026-08-17",
+    "first_close": 44.07,
+    "last_close": 54.95,
+    "sample_days": 381
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "date": "2026-09-02",
+      "title": "教学样本生成方式",
+      "evidence": "381 个工作日日线收盘价由 src/data/generator.py 以固定种子(SEED=20260902)闭式公式合成,重跑逐字节一致;文件指纹见同目录 manifest.json。"
+    },
+    {
+      "id": "S2",
+      "date": "2026-09-02",
+      "title": "复现学习对象",
+      "evidence": "学 vendors/web3-quant-sandbox(commit a6cc399)scripts/generate_prices_sample.py 的闭式三角函数合成思路;公式、窗口与参数均为本项目自写,未拷贝其任何数据文件(研报 §6.8)。"
+    },
+    {
+      "id": "S3",
+      "date": "2026-09-02",
+      "title": "教学数据假设与边界",
+      "evidence": "样本为虚构合成数据,不代表任何真实代币、协议或交易所流动性,不构成任何收益承诺;产物仅用于离线教学研究,不进入实盘执行。"
+    }
+  ]
+}

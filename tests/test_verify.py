@@ -7,6 +7,7 @@ loudly instead of pretending to pass. Behavior is asserted on synthetic roots
 """
 
 import verify
+from paths import PROJECT_ROOT
 from verify import FAIL, PASS, SKIPPED, CheckResult
 
 
@@ -51,6 +52,25 @@ def test_landed_artifact_without_assertion_fails_loudly(tmp_path) -> None:
     (tmp_path / "src" / "research" / "report.py").write_text("", encoding="utf-8")
     result = verify.check_safety_copy(tmp_path)
     assert result.status == FAIL
+
+
+def test_teaching_sample_fails_when_dataset_missing(tmp_path) -> None:
+    result = verify.check_teaching_sample(tmp_path)
+    assert result.status == FAIL
+    assert "manifest.json" in result.detail
+
+
+def test_teaching_sample_tamper_fails_with_named_file(tmp_path) -> None:
+    dataset = tmp_path / "data" / "teaching_sample"
+    dataset.mkdir(parents=True)
+    for name in ("prices.csv", "company.json", "manifest.json"):
+        source = PROJECT_ROOT / "data" / "teaching_sample" / name
+        (dataset / name).write_bytes(source.read_bytes())
+    prices = dataset / "prices.csv"
+    prices.write_bytes(prices.read_bytes() + b"2020-01-01,1.00\n")
+    result = verify.check_teaching_sample(tmp_path)
+    assert result.status == FAIL
+    assert "prices.csv" in result.detail
 
 
 def test_format_distinguishes_ran_and_skipped() -> None:
