@@ -21,7 +21,7 @@
 | 验收 | verify 机器合同;跳过的检查显式 `SKIPPED` | ADR-0006 |
 | LLM | LLMClient 接口 + 无密钥 deterministic_fallback | ADR-0007 |
 | 仓库布局 | 仓库根目录即产品根(`app.py`/`src/`/`tests/` 在根) | 本文件(易逆,不立 ADR) |
-| 身份 | 产品名 Quant-Sandbox,默认端口 **8766**,环境变量可覆盖 | 本文件(易逆,不立 ADR) |
+| 身份 | 产品名 Quant-Sandbox,默认端口 **8766**,`QUANT_SANDBOX_PORT` 可覆盖;运行时身份串 `QuantSandbox/1.0` | 本文件(易逆,不立 ADR);票 #2 |
 
 **对参照物的两处有意改进**:① verify 跳过检查时显式打印 `SKIPPED` 而非静默通过(§8.5 #6);② 端口默认 8766 且可配,使参照物(8765,硬编码)可同机并存对照。
 

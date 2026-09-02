@@ -5,7 +5,7 @@
 
 ## 第〇章 · 课程基建
 
-- [ ] 课 01(#2)仓库骨架 + config/paths + pytest 接线 + verify 占位
+- [x] 课 01(#2)仓库骨架 + config/paths + pytest 接线 + verify 占位 — [01-repo-skeleton-and-verify-placeholder.md](01-repo-skeleton-and-verify-placeholder.md)
 - [ ] 课 02(#3)合成价格生成器 + 来源卡 + manifest 格式
 
 ## 第一章 · 事件引擎与 M1
@@ -70,4 +70,4 @@
 
 ---
 
-进度:**0 / 41**。完课后本目录即全套教材;每课提交时勾选对应行并更新进度。
+进度:**1 / 41**。完课后本目录即全套教材;每课提交时勾选对应行并更新进度。
