@@ -1,10 +1,9 @@
-"""Limit and stop order semantics through the results seam (ticket #4 AC2).
+"""限价与止损单语义,经结果缝断言(票 #4 AC2)。
 
-GTC limit orders rest until some later bar's range crosses them (earliest
-fill is the bar *after* submission); IOC limits fill on the submission bar
-or die; stops trigger on the bar range crossing the stop price and fill at
-the slippage price. Hand-computed example #2: resting limit buy 5@95 fills
-on a 94–97 bar → cash 9525, equity 9525+5*96 = 10005.
+GTC 限价单挂着等,直到后面某根 bar 的区间触及它(最早成交在提交的
+*下一根*);IOC 限价单要么提交当根成交、要么作废;止损单在 bar 区间
+穿越触发价时触发、按滑点价成交。手算样例 #2:挂限价买 5@95,在
+94–97 的 bar 上成交 → 现金 9525,权益 9525+5*96 = 10005。
 """
 
 from decimal import Decimal
@@ -144,6 +143,7 @@ def test_rerun_starts_from_a_clean_pending_book() -> None:
     first = engine.run([make_candle(T0, "100")], SYMBOL, TF)
     second = engine.run([make_candle(T0, "100")], SYMBOL, TF)
     assert first.trades == second.trades == []
+    # 第二次 run 结束后簿上只有这一次的挂单——第一次的挂单若残留,这里会是 2。
     assert len(engine.pending_orders_snapshot()) == 1
 
 

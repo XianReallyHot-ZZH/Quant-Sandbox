@@ -1,15 +1,14 @@
-"""Determinism and float-tightness of the results seam (ticket #4 AC1/AC3).
+"""结果缝的确定性与无 float 泄漏(票 #4 AC1/AC3)。
 
-AC1: the same candles + strategy must render byte-identical output on every
-run — the engine may not consult the wall clock, an unseeded RNG, or
-iteration order that varies between runs. The scenario below exercises every
-result section (a market fill with taker fee, a resting limit, a resting
-stop, one cash-refused fill, one position-refused fill, four equity points).
+AC1:同样的 K 线 + 策略,每次运行必须渲染出逐字节相同的输出——引擎
+不许读墙钟、不许用未设种子的随机数、不许依赖运行之间会变的迭代顺序。
+下面的场景覆盖结果的每个区段(一笔带 taker 费的市价成交、一条挂着的
+限价、一条挂着的止损、一条现金拒单、一条持仓拒单、四个权益点)。
 
-Hand-check of the scenario (10000 start, taker 10bps / maker 5bps):
-bar1 buy 10@100 fee 1.00 → cash 8999; bar4's settling limit 100@95 costs
-9504.75 > 8999 (refused) and the stop sell 15 exceeds the 10 held (refused),
-so the only trade is the first buy and equity ends 8999+10*90 = 9899.
+场景手算(起始 10000,taker 10bps / maker 5bps):
+bar1 买 10@100 费 1.00 → 现金 8999;bar4 结算时限价 100@95 需
+9504.75 > 8999(拒),止损卖 15 超过持有的 10(拒),所以唯一的成交
+是第一笔买入,期末权益 8999+10*90 = 9899。
 """
 
 import dataclasses
@@ -29,7 +28,7 @@ SCENARIO_CANDLES = [
 
 
 def scenario_strategy(ctx, candle):
-    """bar1 market buy 10; bar2 rest a 100@95 limit; bar3 rest a sell stop 15@91."""
+    """bar1 市价买 10;bar2 挂限价买 100@95;bar3 挂卖出止损 15@91。"""
     bars_seen = len(ctx.history)
     if bars_seen == 1:
         return ctx.order_intent("buy", 10)
@@ -65,6 +64,7 @@ def test_same_input_renders_byte_identical_output() -> None:
     first = render_result(make_engine().run(SCENARIO_CANDLES, SYMBOL, TF))
     second = render_result(make_engine().run(SCENARIO_CANDLES, SYMBOL, TF))
     assert first == second
+    # 再按 UTF-8 编码后的字节比一遍——「逐字节」的字面意义。
     assert first.encode("utf-8") == second.encode("utf-8")
 
 
@@ -97,6 +97,8 @@ def test_result_tree_carries_no_floats() -> None:
     """AC3:记账层无 float 泄漏 — 递归走查结果树,任何位置都不允许 float。"""
 
     def walk(node: object) -> None:
+        # 递归走查:遇到 float 就地断言失败;是 dataclass 实例就逐字段
+        # 下钻;是 list/tuple 就逐项下钻——结果树的任何角落都不许藏 float。
         assert not isinstance(node, float), f"float leaked into the result: {node!r}"
         if dataclasses.is_dataclass(node) and not isinstance(node, type):
             for field_value in (getattr(node, f.name) for f in dataclasses.fields(node)):

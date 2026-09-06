@@ -1,8 +1,8 @@
-"""Portfolio accounting contract: hand-computed examples (ticket #4 AC3).
+"""组合记账契约:全部手算样例(票 #4 AC3)。
 
-The accounting layer is Decimal end to end — cash, average entry, realized
-PnL and equity are never floats. All expected numbers below are worked out
-by hand; user-visible error copy is Chinese per ADR-0005.
+记账层端到端 Decimal——现金、平均入场价、已实现盈亏、权益都不是
+float。下面所有期望数字都是手算出来的;用户可见报错文案按 ADR-0005
+用中文。
 """
 
 from decimal import Decimal

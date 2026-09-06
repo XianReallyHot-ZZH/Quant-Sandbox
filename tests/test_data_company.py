@@ -1,11 +1,9 @@
-"""Fictional asset profile, source cards, and the committed dataset trio (ticket #3 AC3).
+"""虚构资产档案、来源卡与入库三件套(票 #3 AC3)。
 
-The asset profile and its three dated source cards are handwritten narrative
-data (research report §6.8: the reference's company.json is handwritten too);
-this test freezes their structure so drift breaks loudly. The committed trio
-(prices.csv + company.json + manifest.json) must stay internally consistent:
-regenerating the sample reproduces the committed bytes, and the manifest
-verifies clean.
+资产档案与三张带日期的来源卡是手写的叙事数据(研报 §6.8:参照物的
+company.json 也是手写);本测试冻结它们的结构,漂移即大声报错。入库
+三件套(prices.csv + company.json + manifest.json)必须内部自洽:
+重新生成样本必须复现入库字节,manifest 校验必须干净。
 """
 
 import json
@@ -30,6 +28,8 @@ def load_profile() -> dict:
 
 
 def test_asset_profile_structure_is_frozen() -> None:
+    # set(profile) == {...}:字典的键集合必须一个不多一个不少——
+    # 多一个少一个键都算结构漂移,测试即红。
     profile = load_profile()
     assert set(profile) == {
         "symbol",
@@ -54,14 +54,15 @@ def test_three_source_cards_complete_and_frozen() -> None:
     assert [card["id"] for card in cards] == ["S1", "S2", "S3"]
     for card in cards:
         assert set(card) == {"id", "date", "title", "evidence"}
-        date.fromisoformat(card["date"])  # raises unless ISO
+        date.fromisoformat(card["date"])  # 不是 ISO 日期会直接抛异常
         assert card["title"].strip()
         assert card["evidence"].strip()
 
 
 def test_profile_numbers_agree_with_generated_sample() -> None:
-    """A handwritten profile must not drift from the formula that mints the CSV."""
+    """手写的档案不许与铸造 CSV 的公式漂移:四个数字逐一对账。"""
     snapshot = load_profile()["market_snapshot"]
+    # [1:] 跳过表头行;rsplit(",", 1) 从右边按第一个逗号切开,取出价格列。
     rows = prices_csv_text().splitlines()[1:]
     assert snapshot["sample_days"] == ROW_COUNT == len(rows)
     assert snapshot["first_close"] == float(rows[0].rsplit(",", 1)[1])
@@ -69,7 +70,7 @@ def test_profile_numbers_agree_with_generated_sample() -> None:
 
 
 def test_minted_dataset_is_self_consistent(tmp_path) -> None:
-    """The mint path reproduces the CSV bytes and leaves a clean manifest behind."""
+    """铸造路径复现 CSV 字节,并留下一个校验干净的 manifest。"""
     (tmp_path / "company.json").write_bytes(PROFILE_PATH.read_bytes())
     mint_sample(tmp_path)
     assert (tmp_path / "prices.csv").read_text(encoding="utf-8") == prices_csv_text()
@@ -77,7 +78,7 @@ def test_minted_dataset_is_self_consistent(tmp_path) -> None:
 
 
 def test_committed_trio_is_internally_consistent() -> None:
-    """What is committed under data/teaching_sample is exactly what the formula mints."""
+    """入库在 data/teaching_sample 下的,必须恰好是公式铸出来的那份。"""
     assert (DATASET_DIR / "prices.csv").read_text(encoding="utf-8") == prices_csv_text()
     assert verify_manifest(DATASET_DIR) == []
     manifest = json.loads((DATASET_DIR / "manifest.json").read_text(encoding="utf-8"))

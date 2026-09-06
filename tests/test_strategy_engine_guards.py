@@ -1,11 +1,10 @@
-"""Fill costs, explicit rejections, and the pre-trade risk seam (ticket #4).
+"""成交成本、显式拒单与成交前风控缝(票 #4)。
 
-Minimal costs are bps-based and Decimal-parameterised — the reference feeds
-float bps into ``Decimal`` (a latent leak); we take Decimal so the fill
-path stays float-free. Fill refusals (cash/position) are recorded on the
-result instead of being silently dropped, per ADR-0006's no-silent-skip
-philosophy; the risk seam itself is exercised with a stub — the five real
-rules land in the next lesson (#5).
+最小成本模型按基点计费、参数必须 Decimal——参照物把 float bps 直接喂
+给 ``Decimal``(一处潜在泄漏);我们收 Decimal,成交路径全程无 float。
+记账拒单(现金/持仓不足)显式记进结果而非静默丢弃,这是 ADR-0006
+「不静默跳过」的哲学;风控缝本身用 stub 测试——五条真规则在下一课
+(#5)落地。
 """
 
 from decimal import Decimal
@@ -23,7 +22,7 @@ from strategy_engine.backtest.models import (
 
 
 class StubRiskManager:
-    """Always blocks; counts what it was asked."""
+    """永远拦截的假风控;顺手数一数自己被问了几次。"""
 
     def __init__(self) -> None:
         self.checked = 0
@@ -34,7 +33,7 @@ class StubRiskManager:
 
 
 class AllowOnlyFirstBar:
-    """Passes the submission bar, blocks every later recheck."""
+    """提交当根放行,之后任何一次复查都拦。"""
 
     def check(self, intent, *, ctx, portfolio, candle) -> RiskCheck:
         return RiskCheck(allowed=candle.ts == T0, rule_id="STUB_RULE", reason="测试拦截")

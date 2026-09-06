@@ -1,1 +1,1 @@
-"""Event-driven backtest: order intents, bar loop, fills, portfolio."""
+"""事件驱动回测:订单意图、bar 循环、成交、组合记账。"""

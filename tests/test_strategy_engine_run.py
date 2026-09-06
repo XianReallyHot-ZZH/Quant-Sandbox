@@ -1,10 +1,9 @@
-"""Engine main loop over the results seam (ticket #4, seam 2).
+"""引擎主循环,经结果缝断言(票 #4,缝 2)。
 
-The public seam is ``BacktestEngine.run(candles, symbol, timeframe) ->
-BacktestResult``: strategies submit Decimal order intents, the bar loop
-settles them, and fills plus the equity trajectory are asserted here.
-Hand-computed example #1 (zero costs): buy 10@100 then sell 10@110 on a
-10000 start realizes 100.00 and ends flat at 10100.00.
+公开缝是 ``BacktestEngine.run(candles, symbol, timeframe) ->
+BacktestResult``:策略提交 Decimal 订单意图,bar 循环结算它们,成交与
+权益轨迹都在这里断言。手算样例 #1(零成本):10000 起步,买 10@100
+再卖 10@110,已实现 100.00,期末空仓、权益 10100.00。
 """
 
 from decimal import Decimal
@@ -22,6 +21,7 @@ def test_market_buy_then_sell_matches_hand_example() -> None:
     bar2 卖 10@110 → 已实现 (110-100)*10 = 100.00、现金 10100、bar2 权益 10100。"""
 
     def strategy(ctx, candle):
+        # 第一根买;之后只要还有持仓就卖——两根 bar 走完一轮往返。
         if len(ctx.history) == 1:
             return ctx.order_intent("buy", 10)
         if ctx.position().qty > 0:
@@ -46,6 +46,7 @@ def test_default_costs_are_zero_and_market_fills_at_close() -> None:
     seen_prices = []
 
     def strategy(ctx, candle):
+        # 顺手把策略看到的收盘价收集起来,断言策略视角与成交价一致。
         seen_prices.append(candle.close)
         return ctx.order_intent("buy", 1) if len(ctx.history) == 1 else None
 
@@ -63,6 +64,7 @@ def test_strategy_context_sees_history_position_and_portfolio() -> None:
     observations = []
 
     def strategy(ctx, candle):
+        # 每根记录一个五元组:history 长度、标的、周期、持仓量、现金。
         observations.append(
             (len(ctx.history), ctx.symbol, ctx.timeframe, ctx.position().qty, ctx.portfolio.cash)
         )
@@ -82,14 +84,17 @@ def test_order_intent_helper_builds_decimal_value_object() -> None:
 
     def strategy(ctx, candle):
         if len(ctx.history) == 1:
+            # 故意传 float:1.5 与 95.5 都应被 str 精确转成 Decimal。
             intent = ctx.order_intent("buy", 1.5, "limit", price=95.5)
             intents.append(intent)
         return None
 
     BacktestEngine(strategy_fn=strategy).run([make_candle(T0, "100")], SYMBOL, TF)
+    # (intent,) = intents:解包断言列表里恰好一个元素。
     (intent,) = intents
     assert isinstance(intent, OrderIntent)
     assert intent.symbol == SYMBOL
+    # is:同一枚举成员(不是值相等的另一个对象)。
     assert intent.side is OrderSide.BUY
     assert intent.type is OrderType.LIMIT
     assert intent.time_in_force is TimeInForce.GTC
@@ -99,5 +104,6 @@ def test_order_intent_helper_builds_decimal_value_object() -> None:
 
 
 def test_run_rejects_empty_candles_with_chinese_copy() -> None:
+    # lambda ctx, candle: None:一个永远不下单的策略,够测空 K 线的守卫了。
     with pytest.raises(ValueError, match="K 线序列不能为空"):
         BacktestEngine(strategy_fn=lambda ctx, candle: None).run([], SYMBOL, TF)

@@ -1,1 +1,1 @@
-"""Event-driven strategy engine (Decimal order intents, ADR-0003)."""
+"""事件驱动策略引擎(Decimal 订单意图,ADR-0003)。"""
