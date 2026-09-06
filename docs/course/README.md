@@ -11,7 +11,7 @@
 ## 第一章 · 事件引擎与 M1
 
 - [x] 课 03(#4)事件引擎核心(Decimal 订单意图)— [03-event-engine-core-decimal-order-intents.md](03-event-engine-core-decimal-order-intents.md)
-- [ ] 课 04(#5)风控前置 + 出场逻辑
+- [x] 课 04(#5)风控前置 + 出场逻辑 — [04-risk-rules-pre-submit-and-exit-logic.md](04-risk-rules-pre-submit-and-exit-logic.md)
 - [ ] 课 05(#6)M1 教学回测 runner + 风险模拟层
 - [ ] 课 06(#7)研究报告组装 + report_cli
 - [ ] 课 07(#8)verify 合同 v1 → **里程碑 M1**(含章复习)
@@ -70,4 +70,4 @@
 
 ---
 
-进度:**3 / 41**。完课后本目录即全套教材;每课提交时勾选对应行并更新进度。
+进度:**4 / 41**。完课后本目录即全套教材;每课提交时勾选对应行并更新进度。
