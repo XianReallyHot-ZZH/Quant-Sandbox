@@ -3,7 +3,7 @@ name: learn
 disable-model-invocation: true
 ---
 
-交互式学习一课:以「站」为单位走读已实现的课程,面向 Python 初学者,中文授课。参数为课号(课 N 的教材是 `docs/course/NN-*.md`,对应票 #N+1);缺省时列出已有教材的课让用户选,或接续 `docs/course/STUDY.md`(若存在)最后一条的下一课。
+交互式学习一课:以「站」为单位走读已实现的课程,面向 Python 初学者,中文授课。参数为**票号,与 /lesson 同一数轴**:票 #M 即课 M−1(教材 `docs/course/NN-*.md`,NN 为 M−1 补零两位;票 #2 = 课 01)。两技能同号必指同一节课——`/lesson 5` 造它,`/learn 5` 学它。缺省时列出已有教材的课让用户选,或接续 `docs/course/STUDY.md`(若存在)最后一条的下一课。
 
 ## 0. 前提
 
