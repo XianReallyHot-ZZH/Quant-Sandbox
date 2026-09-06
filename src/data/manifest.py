@@ -43,10 +43,13 @@ def build_manifest(source: str, generated_at: str, files: Mapping[str, Path]) ->
 
 def write_manifest(directory: Path, manifest: dict) -> Path:
     """把 manifest 写成 UTF-8 的 JSON 文件(缩进 2;ensure_ascii=False
-    让中文原样落盘而不是 \\u 转义)。返回写出的路径。"""
+    让中文原样落盘而不是 \\u 转义;newline="\\n" 让任何平台都写 LF 字节)。
+    返回写出的路径。"""
     path = directory / MANIFEST_NAME
     path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return path
 

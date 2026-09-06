@@ -98,7 +98,9 @@ def mint_sample(directory: Path = DATASET_DIR) -> dict:
         raise FileNotFoundError(f"company.json 缺失,请先手写资产档案:{company}")
     # parents=True 连父目录一起建;exist_ok=True 已存在也不报错。
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / PRICES_NAME).write_text(prices_csv_text(), encoding="utf-8")
+    # newline="\n" 钉死换行:Windows 文本写默认会把 \n 翻成 \r\n,那会
+    # 让重铸的字节与入库不同,manifest 的 sha256 契约随之破裂。
+    (directory / PRICES_NAME).write_text(prices_csv_text(), encoding="utf-8", newline="\n")
     manifest = build_manifest(
         source=MANIFEST_SOURCE,
         generated_at=GENERATED_AT,

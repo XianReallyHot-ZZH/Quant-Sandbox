@@ -50,6 +50,15 @@ def test_mint_reruns_are_byte_identical(tmp_path) -> None:
         assert (first / name).read_bytes() == (second / name).read_bytes(), name
 
 
+def test_minted_bytes_are_lf_only(tmp_path) -> None:
+    """字节契约:铸出的文件在任何平台都是 LF——Windows 文本写默认会把
+    \\n 翻成 \\r\\n,那会破坏 manifest 的跨平台 sha256(ADR-0004)。"""
+    _with_profile(tmp_path)
+    mint_sample(tmp_path)
+    for name in ("prices.csv", "manifest.json"):
+        assert b"\r" not in (tmp_path / name).read_bytes(), name
+
+
 def test_main_mints_and_reports_success(tmp_path) -> None:
     _with_profile(tmp_path)
     # StringIO:内存里的「假 stdout」,让测试能接住 main 的输出做断言。
