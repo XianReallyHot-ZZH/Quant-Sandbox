@@ -30,6 +30,6 @@ disable-model-invocation: true
 
 ## 5. 收口
 
-在 docs/course/README.md 勾掉本课一行;文档与索引一并 commit:`docs: lesson <NN> — <标题>`。
+在 docs/course/README.md 勾掉本课一行;同步根 README(课程进度计数、课表新增行、三条命令预期里的测试数、已落地能力清单);文档与索引一并 commit:`docs: lesson <NN> — <标题>`。
 
 完成判据(全技能):代码与文档两个 commit 都在,全量测试绿,双轴报告已交付;然后告知用户:文档路径、票是否已随 push 关闭、下一张票的号,并提醒 /clear。
