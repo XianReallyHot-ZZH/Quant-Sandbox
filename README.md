@@ -10,7 +10,7 @@
 
 > **⚠️ 重要声明**:本项目仅用于教学与研究。行情数据为**虚构资产 `QUANT-DEMO/USDT` 的合成数据**(固定种子闭式公式生成),不代表任何真实代币、协议或交易所;一切输出**不构成投资建议**;本项目的边界是离线研究,**不进入实盘执行**。
 
-## 课程进度:3 / 41
+## 课程进度:4 / 41
 
 每节课 = 一张 GitHub Issue = 一次实现会话 = 一个 commit,配套教学文档进 `docs/course/`:
 
@@ -19,6 +19,7 @@
 | 课 01 | 仓库骨架 + config/paths + pytest 接线 + verify 占位 | [docs/course/01-…](docs/course/01-repo-skeleton-and-verify-placeholder.md) |
 | 课 02 | 合成价格生成器 + 来源卡 + manifest 格式 | [docs/course/02-…](docs/course/02-synthetic-price-generator-source-cards-and-manifest.md) |
 | 课 03 | 事件引擎核心(Decimal 订单意图) | [docs/course/03-…](docs/course/03-event-engine-core-decimal-order-intents.md) |
+| 课 04 | 风控前置 + 出场逻辑 | [docs/course/04-…](docs/course/04-risk-rules-pre-submit-and-exit-logic.md) |
 
 完整 41 课路线(双引擎、统计审计、投资门、因子挖掘、受限 DSL……)见课程目录:[docs/course/README.md](docs/course/README.md)。
 
@@ -43,7 +44,7 @@ python verify.py      # 机器验收:文件清单 / 数据集 sha256 / 全量测
 
 ```text
 $ python -m pytest
-74 passed
+107 passed
 
 $ python app.py
 QuantSandbox/1.0 · 量化研究实验沙盒
@@ -55,7 +56,7 @@ $ python verify.py
 [SKIPPED] 研究报告安全文案 — 研究报告尚未组装(课 06 落地后启用)
 [SKIPPED] 冻结数据集校验 — 冻结数据集尚未抓取(课 19 落地后启用)
 [PASS] 教学样本数据集 — manifest.json sha256 全部一致
-[PASS] 全量 pytest — 74 passed in 0.2s
+[PASS] 全量 pytest — 107 passed
 ```
 
 注意那两行 `SKIPPED`:被跳过的检查**必须显式打印并说明原因**,受检产物一旦落地而断言未写则立即 FAIL——「verify 全绿」在本项目里是诚实的信号(ADR-0006)。
@@ -72,6 +73,7 @@ PYTHONPATH=src python -m data.generator
 
 - **教学样本数据集** —— 381 个工作日的合成日线(固定种子闭式公式,重跑逐字节一致),虚构资产档案 + 来源卡,`manifest.json` 记每个文件的 sha256;篡改任何数据文件都会被 verify 点名。
 - **事件驱动回测引擎** —— Decimal 订单意图(market/limit/stop/stop-limit,GTC/IOC/FOK),挂单簿语义(限价挂着等未来的 bar 触及,决策根与结算根分离防前视)，bps 费用与滑点模型,全 Decimal 组合记账(现金/加权均价/已实现盈亏/逐 bar 权益)，记账拒单显式入结果而非静默吞掉。
+- **风控前置 + 出场纪律** —— 五条内置 RiskRule(仓位上限 / 峰值回撤熔断 / 振幅闸 / 异常 K 线闸 / 紧急停止)挂在订单提交前,`RiskManager` 命中即短路,拒单带 rule_id 与中文理由;出场判定五级阶梯(移动止损 → 止损 → 止盈 → 超时平仓 → 信号反转),平仓成交带中文出场原因,出场单同样过风控闸。
 - **机器验收合同(verify)** —— 必需文件清单、数据集指纹、全量 pytest 三类检查已实跑,两类显式 SKIPPED 等待对应课程。
 
 ## 设计原则(速览)
