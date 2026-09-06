@@ -18,10 +18,17 @@ T3 = datetime(2025, 3, 6)
 
 
 def make_candle(
-    ts: datetime, close: str, *, low: str | None = None, high: str | None = None
+    ts: datetime,
+    close: str,
+    *,
+    low: str | None = None,
+    high: str | None = None,
+    volume: str = "1",
 ) -> Candle:
     """造一根 K 线:open/high/low 默认全部压平成 close,需要时再用关键字
-    参数覆盖——多数场景只关心收盘价,这样一行就能造一根可用的 bar。"""
+    参数覆盖——多数场景只关心收盘价,这样一行就能造一根可用的 bar。
+    volume 单独默认为 "1"(而非压平),因为「零成交量的 K 线」是风控
+    规则要识别的异常形态,值得显式传 "0" 进来。"""
     close_dec = Decimal(close)
     return Candle(
         ts=ts,
@@ -29,5 +36,5 @@ def make_candle(
         high=Decimal(high) if high is not None else close_dec,
         low=Decimal(low) if low is not None else close_dec,
         close=close_dec,
-        volume=Decimal("1"),
+        volume=Decimal(volume),
     )

@@ -101,6 +101,9 @@ class BacktestTrade:
     price: Decimal
     fee: Decimal
     realized_pnl: Decimal
+    # 平仓成交带出场原因(止损/止盈/移动止损/超时平仓/信号反转,
+    # ADR-0005 运行时契约);开仓与策略自主买卖为空串。
+    exit_reason: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +161,8 @@ def render_result(result: BacktestResult) -> str:
         (
             f"trade {t.ts.isoformat()} {t.symbol} {t.side} "
             f"qty={t.qty} price={t.price} fee={t.fee} realized={t.realized_pnl}"
+            # 出场原因只出现在平仓成交上;空串不渲染,老格式零扰动。
+            + (f" exit={t.exit_reason}" if t.exit_reason else "")
         )
         for t in result.trades
     )
