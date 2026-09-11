@@ -32,6 +32,15 @@ from strategy_engine.backtest.protocol import OrderIntent, OrderSide
 # 共享一个,少造对象也少一次构造开销。
 _ALLOWED = RiskCheck(allowed=True)
 
+# 五条内置规则的 rule_id 常量:字符串只写这一次。规则类的默认值、
+# 风险 findings 层(课 05 ``risk/simulation.py``)的严重度阶梯与去重键
+# 都从这里取——rule_id 是跨层运行时契约,散落字面量迟早改漏一处。
+EMERGENCY_HALT_RULE_ID = "EMERGENCY_HALT"
+MAX_POSITION_RULE_ID = "MAX_POSITION_PCT"
+MAX_DRAWDOWN_RULE_ID = "MAX_DAILY_LOSS_PCT"
+MAX_SLIPPAGE_RULE_ID = "MAX_SLIPPAGE_PCT"
+ABNORMAL_CANDLE_RULE_ID = "ABNORMAL_ORDERBOOK"
+
 
 def _require_decimal(name: str, value: Decimal) -> None:
     """构造点边界:阈值不是 Decimal 就炸(拒绝 float 入账本)。"""
@@ -67,7 +76,7 @@ class MaxPositionRule:
     """
 
     max_notional_usd: Decimal
-    rule_id: str = "MAX_POSITION_PCT"
+    rule_id: str = MAX_POSITION_RULE_ID
 
     def __post_init__(self) -> None:
         _require_decimal("max_notional_usd", self.max_notional_usd)
@@ -112,7 +121,7 @@ class MaxDrawdownRule:
     """
 
     max_drawdown_pct: Decimal
-    rule_id: str = "MAX_DAILY_LOSS_PCT"
+    rule_id: str = MAX_DRAWDOWN_RULE_ID
     _peak: Decimal = Decimal("0")
 
     def __post_init__(self) -> None:
@@ -153,7 +162,7 @@ class MaxSlippageRule:
     糟糕,任何新单都先拦下来。买卖同样受检(滑点不挑方向)。"""
 
     max_spread_pct: Decimal
-    rule_id: str = "MAX_SLIPPAGE_PCT"
+    rule_id: str = MAX_SLIPPAGE_RULE_ID
 
     def __post_init__(self) -> None:
         _require_decimal("max_spread_pct", self.max_spread_pct)
@@ -197,7 +206,7 @@ class AbnormalCandleRule:
     """
 
     max_price_jump_pct: Decimal
-    rule_id: str = "ABNORMAL_ORDERBOOK"
+    rule_id: str = ABNORMAL_CANDLE_RULE_ID
 
     def __post_init__(self) -> None:
         _require_decimal("max_price_jump_pct", self.max_price_jump_pct)
@@ -253,7 +262,7 @@ class KillSwitch:
     ``reset``。它本身不做判断——由外部(监控、人工、更高层的规则)在
     认为该停机时拉闸。出场单同样会被它拦(闸门不分进出)。"""
 
-    rule_id: str = "EMERGENCY_HALT"
+    rule_id: str = EMERGENCY_HALT_RULE_ID
     tripped: bool = False
     tripped_reason: str = ""
 
@@ -316,3 +325,29 @@ class RiskManager:
             if not result.allowed:
                 return result
         return _ALLOWED
+
+
+def default_risk_manager(*, initial_capital: Decimal) -> RiskManager:
+    """M1 教学回测的默认风控闸(票 #6):五条规则,紧急停止在最前。
+
+    对照参照物 ``src/risk/config.py:default_risk_manager`` 同构复现,阈值
+    逐条照抄(分数单位,课 04 文档):仓位上限 = 初始本金、峰值回撤 15%、
+    当根振幅 2%、相邻收盘跳动 10%。「仓位上限 = 初始本金」对全仓策略有
+    一个真实的教学代价:权益一旦超过初始本金,下一次全仓买入的名义就超
+    上限、会被 MAX_POSITION_PCT 拦下——策略因此不能复利加仓。这个代价
+    在课 05 的冻结指标与风险 findings 里都清晰可见,是风控前置语义的
+    活教材,刻意保留(参照物如此)。
+
+    每次调用都**新造**全部规则实例:``MaxDrawdownRule`` 的峰值活在实例
+    里、不随 ``engine.run`` 重置,复用旧实例会让上一次回测的峰值串进
+    这一次(课 04 文档点破的坑)——工厂模式天然免疫。
+    """
+    return RiskManager(
+        rules=[
+            KillSwitch(),
+            MaxPositionRule(max_notional_usd=initial_capital),
+            MaxDrawdownRule(max_drawdown_pct=Decimal("0.15")),
+            MaxSlippageRule(max_spread_pct=Decimal("0.02")),
+            AbnormalCandleRule(max_price_jump_pct=Decimal("0.10")),
+        ]
+    )

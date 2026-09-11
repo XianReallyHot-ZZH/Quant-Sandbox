@@ -10,11 +10,13 @@ from strategy_engine.backtest.candles import Candle
 
 SYMBOL = "QUANT-DEMO/USDT"
 TF = "1d"
-# 四个时间戳常量,对应场景里连续的四根日 bar。
+# 六个时间戳常量,对应场景里连续的六根日 bar(课 05 起双均线场景用到后两根)。
 T0 = datetime(2025, 3, 3)
 T1 = datetime(2025, 3, 4)
 T2 = datetime(2025, 3, 5)
 T3 = datetime(2025, 3, 6)
+T4 = datetime(2025, 3, 7)
+T5 = datetime(2025, 3, 10)
 
 
 def make_candle(

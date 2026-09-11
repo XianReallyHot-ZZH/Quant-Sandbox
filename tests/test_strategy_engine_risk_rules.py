@@ -21,6 +21,7 @@ from strategy_engine.backtest.risk import (
     MaxPositionRule,
     MaxSlippageRule,
     RiskManager,
+    default_risk_manager,
 )
 
 
@@ -311,3 +312,31 @@ def test_float_thresholds_are_rejected_at_the_boundary() -> None:
         MaxSlippageRule(max_spread_pct=0.1)
     with pytest.raises(TypeError, match="max_price_jump_pct 必须是 Decimal"):
         AbnormalCandleRule(max_price_jump_pct=0.1)
+
+
+def test_default_risk_manager_wires_five_rules_in_vendor_order() -> None:
+    """M1 默认风控闸(票 #6):五条规则,紧急停止在最前(对照参照物
+    risk/config.py)。rule_id 顺序就是短路顺序,被测试锁死。"""
+    manager = default_risk_manager(initial_capital=Decimal("10000"))
+    assert [r.rule_id for r in manager.rules] == [
+        "EMERGENCY_HALT",
+        "MAX_POSITION_PCT",
+        "MAX_DAILY_LOSS_PCT",
+        "MAX_SLIPPAGE_PCT",
+        "ABNORMAL_ORDERBOOK",
+    ]
+    # 阈值照抄参照物默认:仓位上限 = 初始本金、峰值回撤 15%、振幅 2%、
+    # 相邻收盘跳动 10%;全部 Decimal。
+    position, drawdown, slippage, abnormal = manager.rules[1:]
+    assert position.max_notional_usd == Decimal("10000")
+    assert drawdown.max_drawdown_pct == Decimal("0.15")
+    assert slippage.max_spread_pct == Decimal("0.02")
+    assert abnormal.max_price_jump_pct == Decimal("0.10")
+
+
+def test_default_risk_manager_builds_fresh_rules_each_call() -> None:
+    """每次调用新造规则实例:MaxDrawdownRule 的峰值活在实例里,复用
+    会跨 run 串味(课 04 文档点破的坑),默认闸必须天然免疫。"""
+    first = default_risk_manager(initial_capital=Decimal("10000"))
+    second = default_risk_manager(initial_capital=Decimal("10000"))
+    assert first.rules[2] is not second.rules[2]
